@@ -4,7 +4,7 @@
 
 **Team:** Solo  
 **Members:** Johan  
-**Demo video:** [Add a link to your demo]
+**Demo video:** [Open Fishing demo (narrated, 1:04)](./Open-Fishing-Demo.mp4)
 
 ---
 
@@ -92,7 +92,7 @@ navigation.
 
 ## 5. Demo
 
-**Demo video:** [Add a link to your 2–3 minute demo]
+**Demo video:** [Open Fishing demo (narrated, 1:04)](./Open-Fishing-Demo.mp4)
 
 ## 6. Challenges and learnings
 
@@ -103,7 +103,7 @@ database.
 
 ## 7. What's next (optional)
 
-- Add a demo video and screenshots of the running app.
+- Add screenshots of the running app.
 - Consider optional tide and local fish-report integrations.
 - Add automated tests and document supported Windows versions.
 
