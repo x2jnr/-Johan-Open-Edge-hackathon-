@@ -2,8 +2,8 @@
 
 > An interactive fishing dashboard for exploring destinations and checking local weather and marine conditions.
 
-**Team:** [Add team name]  
-**Members:** [Add team member names]  
+**Team:** Solo  
+**Members:** Johan  
 **Demo video:** [Add a link to your demo]
 
 ---
@@ -120,4 +120,4 @@ The globe uses Natural Earth 1:50m land data, which is in the public domain:
 <https://www.naturalearthdata.com/>.
 
 No project license is included. All rights to the project code and artwork are
-reserved by default; add a `LICENSE` file if you want to grant reuse rights.
+reserved by default; 
