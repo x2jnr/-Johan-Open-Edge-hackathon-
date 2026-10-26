@@ -1,0 +1,1702 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f4f8f7" />
+    <title>Open Fishing — Find your next catch</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #16312e;
+        --muted: #788c87;
+        --teal: #147a70;
+        --teal-dark: #0b5e56;
+        --mint: #ddf2e9;
+        --paper: #f4f8f7;
+        --line: #e6eeeb;
+        --white: #fff;
+        --orange: #f3a45b;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      * { box-sizing: border-box; }
+      body { margin: 0; min-width: 320px; background: var(--paper); color: var(--ink); }
+      button, input, select { font: inherit; }
+      button { cursor: pointer; }
+      .app-shell { min-height: 100vh; }
+      .topbar {
+        height: 76px; padding: 0 max(28px, calc((100vw - 1320px) / 2));
+        display: flex; align-items: center; justify-content: space-between;
+        background: rgba(255,255,255,.94); border-bottom: 1px solid var(--line);
+        position: sticky; top: 0; z-index: 5; backdrop-filter: blur(12px);
+      }
+      .brand { display: flex; align-items: center; gap: 11px; color: var(--ink); text-decoration: none; font-size: 20px; font-weight: 800; letter-spacing: -.7px; }
+      .brand-mark { width: 37px; height: 37px; display: grid; place-items: center; border-radius: 13px; color: #fff; background: var(--teal);       }
+      .brand-mark svg { width: 23px; height: 23px; }
+      .topbar-right { display: flex; align-items: center; gap: 20px; }
+      .weather-chip { display: flex; align-items: center; gap: 8px; color: #55706a; font-size: 13px; font-weight: 650; }
+      .weather-chip strong { color: var(--ink); }
+      .layout { width: min(1320px, calc(100% - 56px)); margin: 0 auto; display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 38px; padding: 34px 0 54px; }
+      .sidebar { position: sticky; top: 106px; align-self: start; }
+      .sidebar-label { color: #9aaba6; font-weight: 750; font-size: 10px; letter-spacing: 1.6px; text-transform: uppercase; margin: 9px 0 13px 12px; }
+      .nav-list { display: grid; gap: 5px; }
+      .nav-button { display: flex; align-items: center; gap: 13px; border: 0; border-radius: 12px; background: transparent; color: #71847f; padding: 12px 14px; text-align: left; font-size: 14px; font-weight: 650; transition: .18s ease; }
+      .nav-button svg { width: 19px; height: 19px; }
+      .nav-button:hover { background: #eaf2ef; color: var(--ink); }
+      .nav-button.active { background: #e1f2eb; color: var(--teal-dark); }
+      .side-card { margin-top: 35px; padding: 18px; border-radius: 16px; color: #fff; background: linear-gradient(145deg, #147a70, #0d5a54); overflow: hidden; position: relative; }
+      .side-card:after { content: ""; position: absolute; width: 110px; height: 110px; border: 1px solid rgba(255,255,255,.15); border-radius: 50%; right: -43px; bottom: -52px; box-shadow: 0 0 0 13px rgba(255,255,255,.045), 0 0 0 28px rgba(255,255,255,.035); }
+      .side-card small { color: #b7e2d5; font-size: 10px; font-weight: 750; text-transform: uppercase; letter-spacing: 1.2px; }
+      .side-card h3 { margin: 11px 0 6px; font-size: 16px; line-height: 1.3; }
+      .side-card p { margin: 0; max-width: 145px; color: #c9e7de; font-size: 12px; line-height: 1.6; }
+      .side-card button { margin-top: 16px; position: relative; z-index: 1; border: 0; border-radius: 9px; padding: 9px 12px; background: #fff; color: var(--teal-dark); font-size: 11px; font-weight: 750; }
+      main { min-width: 0; }
+      .page { display: none; animation: appear .22s ease; }
+      .page.active { display: block; }
+      @keyframes appear { from { opacity: .5; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+      .eyebrow { color: var(--teal); text-transform: uppercase; font-size: 10px; font-weight: 800; letter-spacing: 1.6px; }
+      h1 { margin: 8px 0 7px; font-size: clamp(27px, 3vw, 36px); letter-spacing: -1.35px; line-height: 1.15; }
+      .page-intro { color: var(--muted); font-size: 14px; margin: 0; }
+      .map-heading { display: flex; justify-content: space-between; gap: 20px; align-items: flex-end; margin-bottom: 24px; }
+      .live-pill { color: #53736c; background: #e7f3ee; border-radius: 30px; padding: 8px 11px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+      .live-pill span { display: inline-block; width: 7px; height: 7px; background: #4aaf79; border-radius: 50%; margin-right: 6px; }
+      .map-layout { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(260px, .9fr); gap: 19px; }
+      .card { background: var(--white); border: 1px solid #eaf0ee; border-radius: 18px; box-shadow: 0 5px 18px rgba(22,49,46,.035); }
+      .map-card { min-height: 434px; padding: 21px; overflow: hidden; }
+      .search-wrap { position: relative; z-index: 2; }
+      .searchbox { height: 48px; display: flex; align-items: center; gap: 10px; padding: 0 13px; border: 1px solid #dfe9e5; border-radius: 12px; background: #fff; }
+      .searchbox:focus-within { border-color: #67a99d; box-shadow: 0 0 0 3px rgba(20,122,112,.1); }
+      .searchbox svg { width: 18px; flex: 0 0 auto; color: #82958f; }
+      .searchbox input { border: 0; outline: 0; width: 100%; min-width: 0; color: var(--ink); font-size: 13px; background: transparent; }
+      .searchbox input::placeholder { color: #9baaa6; }
+      .searchbox button { border: 0; border-radius: 8px; background: var(--teal); color: #fff; padding: 8px 12px; font-size: 11px; font-weight: 750; }
+      .suggestions { display: none; position: absolute; top: 54px; left: 0; right: 0; padding: 6px; background: #fff; border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 12px 28px #193a3220; }
+      .suggestions.open { display: block; }
+      .suggestion { display: block; width: 100%; border: 0; border-radius: 8px; background: #fff; padding: 10px; text-align: left; color: var(--ink); font-size: 12px; }
+      .suggestion:hover { background: #f0f7f4; }
+      .suggestion small { display: block; margin-top: 3px; color: var(--muted); }
+      .globe-stage { height: 319px; margin: 10px -2px -4px; display: grid; place-items: center; position: relative; overflow: hidden; background: radial-gradient(ellipse at 50% 45%, #f8fcfa 0%, #f8fcfa 47%, #f0f7f4 100%); border-radius: 15px; }
+      .globe { width: min(100%, 520px); height: 304px; }
+      .globe-shadow { fill: #dbeae3; opacity: .68; }
+      .globe-water { fill: #c8e8e5; stroke: #acd8d3; stroke-width: 1.2; }
+      .globe-grid { fill: none; stroke: #9dd0ca; stroke-width: .8; opacity: .55; }
+      .land { fill: #8dbb99; stroke: #79aa87; stroke-width: 1.3; stroke-linejoin: round; }
+      .map-pin { fill: #f28f50; stroke: white; stroke-width: 3; filter: drop-shadow(0 2px 3px #254d3d55); transition: cx .4s ease, cy .4s ease; }
+      .map-pulse { fill: #f28f50; opacity: .2; animation: pulse 1.8s infinite; transform-origin: center; }
+      @keyframes pulse { 0% { r: 8px; opacity: .4; } 100% { r: 19px; opacity: 0; } }
+      .map-label { position: absolute; bottom: 13px; left: 14px; color: #6d8580; font-size: 10px; font-weight: 700; letter-spacing: .5px; }
+      .map-caption { position: absolute; top: 15px; right: 15px; color: #80958e; font-size: 10px; }
+      .conditions-card { padding: 21px; }
+      .conditions-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+      .conditions-card h2 { font-size: 17px; letter-spacing: -.4px; margin: 6px 0 4px; }
+      .location-name { color: var(--muted); font-size: 12px; }
+      .sun-icon { color: #efa24f; font-size: 27px; line-height: 1; }
+      .temp-line { display: flex; gap: 9px; align-items: baseline; margin: 19px 0 7px; }
+      .temperature { font-size: 45px; letter-spacing: -3px; font-weight: 700; }
+      .weather-description { color: #718780; font-size: 12px; }
+      .bite-meter { margin: 19px 0 17px; background: #f3f8f6; border-radius: 12px; padding: 13px; }
+      .bite-head { display: flex; justify-content: space-between; font-size: 11px; font-weight: 750; }
+      .bite-head span:last-child { color: var(--teal); }
+      .meter-track { height: 6px; background: #dfece7; border-radius: 9px; margin: 9px 0 6px; overflow: hidden; }
+      .meter-fill { width: 79%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #79c590, #178476); transition: width .3s; }
+      .bite-note { color: var(--muted); font-size: 10px; }
+      .condition-list { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 10px; }
+      .condition-item { display: flex; gap: 8px; align-items: flex-start; }
+      .condition-icon { width: 29px; height: 29px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 9px; background: #edf6f2; font-size: 14px; }
+      .condition-item small { display: block; margin: 1px 0 4px; color: #8b9c97; font-size: 9px; }
+      .condition-item strong { display: block; font-size: 11px; }
+      .best-time { margin-top: 17px; border-top: 1px solid var(--line); padding-top: 14px; display: flex; justify-content: space-between; color: #6e827c; font-size: 11px; }
+      .best-time strong { color: var(--ink); }
+      .below-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 19px; }
+      .mini-card { padding: 18px 20px; }
+      .mini-card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+      .mini-card h3 { margin: 0; font-size: 14px; letter-spacing: -.3px; }
+      .text-button { border: 0; background: transparent; color: var(--teal); font-size: 11px; font-weight: 750; padding: 4px; }
+      .species-row { display: flex; align-items: center; gap: 11px; }
+      .fish-emoji { width: 39px; height: 39px; display: grid; place-items: center; border-radius: 11px; background: #eff7f3; font-size: 21px; }
+      .species-row strong { font-size: 12px; }
+      .species-row small { display: block; margin-top: 3px; color: var(--muted); font-size: 10px; }
+      .species-tag { margin-left: auto; padding: 6px 8px; border-radius: 20px; background: #fff3e7; color: #bb783f; font-size: 9px; font-weight: 750; white-space: nowrap; }
+      .tide-bars { height: 54px; display: flex; align-items: flex-end; gap: 8px; padding: 0 5px; }
+      .tide-bars span { flex: 1; border-radius: 5px 5px 2px 2px; background: linear-gradient(0deg, #b5ddd1, #58ab9b); }
+      .tide-times { display: flex; justify-content: space-between; color: #91a19b; font-size: 9px; margin-top: 7px; }
+      .section-header { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; margin-bottom: 25px; }
+      .primary-button { border: 0; border-radius: 10px; padding: 11px 15px; background: var(--teal); color: #fff; font-size: 12px; font-weight: 750; box-shadow: 0 5px 12px #147a7020; transition: .18s; }
+      .primary-button:hover { background: var(--teal-dark); transform: translateY(-1px); }
+      .event-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 17px; }
+      .event-card { padding: 18px; }
+      .event-top { display: flex; gap: 13px; align-items: flex-start; }
+      .date-block { width: 47px; height: 54px; display: grid; align-content: center; justify-items: center; background: #e9f5ef; color: var(--teal-dark); border-radius: 11px; flex: 0 0 auto; }
+      .date-block strong { font-size: 19px; line-height: 1.1; }
+      .date-block small { font-size: 9px; font-weight: 800; letter-spacing: .7px; }
+      .event-card h3 { margin: 2px 0 5px; font-size: 14px; }
+      .event-card .event-location { color: var(--muted); font-size: 11px; }
+      .event-description { color: #71847f; font-size: 11px; line-height: 1.6; margin: 14px 0; min-height: 35px; }
+      .event-footer { display: flex; justify-content: space-between; align-items: center; gap: 8px; border-top: 1px solid var(--line); padding-top: 12px; }
+      .attending { color: #7c8e88; font-size: 10px; }
+      .join-button { border: 1px solid #c9e2d8; border-radius: 8px; padding: 7px 11px; background: #fff; color: var(--teal); font-size: 10px; font-weight: 750; }
+      .join-button.joined { background: #e8f5ee; border-color: #e8f5ee; }
+      .profile-card { padding: 27px; }
+      .profile-hero { display: flex; gap: 18px; align-items: center; padding-bottom: 22px; border-bottom: 1px solid var(--line); }
+      .profile-avatar { width: 74px; height: 74px; display: grid; place-items: center; border-radius: 24px; color: #6a4e35; background: #e6d6bd; font-size: 24px; font-weight: 800; }
+      .profile-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
+      .profile-photo-actions { display: grid; justify-items: start; gap: 5px; }
+      .profile-photo-button { border: 0; padding: 0; color: var(--teal); background: transparent; font-size: 11px; font-weight: 750; cursor: pointer; }
+      .profile-photo-help { color: var(--muted); font-size: 10px; }
+      .profile-hero h2 { margin: 0 0 5px; font-size: 21px; }
+      .profile-hero p { margin: 0; color: var(--muted); font-size: 12px; }
+      .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 22px 0; }
+      .stat-box { padding: 15px; background: #f5f9f7; border-radius: 13px; }
+      .stat-box strong { display: block; font-size: 22px; letter-spacing: -.7px; }
+      .stat-box small { display: block; margin-top: 5px; color: var(--muted); font-size: 10px; }
+      .profile-form { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+      .field { display: grid; gap: 6px; color: #6e827c; font-size: 11px; font-weight: 700; }
+      .field input, .field select { min-height: 41px; width: 100%; border: 1px solid #dfe9e5; border-radius: 9px; padding: 0 11px; outline: 0; color: var(--ink); background: #fff; font-size: 12px; }
+      .field input:focus, .field select:focus { border-color: #67a99d; }
+      .profile-form .primary-button { justify-self: start; align-self: end; }
+      .saved-message { color: var(--teal); font-size: 11px; align-self: center; }
+      .database-status { display: block; margin-top: 6px; color: var(--muted); font-size: 10px; }
+      .leaderboard-card { overflow: hidden; }
+      .leaderboard-head, .leader-row { display: grid; grid-template-columns: 52px minmax(140px, 1fr) minmax(90px, .8fr) 95px; gap: 10px; align-items: center; padding: 14px 22px; }
+      .leaderboard-head { background: #f8fbfa; color: #94a29e; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; font-size: 9px; }
+      .leaderboard-head[hidden] { display: none; }
+      .leader-row { min-height: 68px; border-top: 1px solid #edf2f0; font-size: 12px; }
+      .empty-state { padding: 30px 20px; text-align: center; color: var(--muted); font-size: 12px; line-height: 1.6; }
+      .leaderboard-card .empty-state { border-top: 1px solid #edf2f0; }
+      .event-empty { grid-column: 1 / -1; }
+      .rank { color: #85958f; font-weight: 800; }
+      .angler { display: flex; align-items: center; gap: 10px; font-weight: 750; }
+      .angler-avatar { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 11px; background: #eff3e9; font-size: 16px; }
+      .angler small { display: block; color: #91a09b; font-size: 9px; font-weight: 500; margin-top: 3px; }
+      .fish-name { color: #6f827c; font-size: 11px; }
+      .weight { font-weight: 800; text-align: right; }
+      .rank.gold { color: #e5a538; }
+      .rank.silver { color: #91a1a6; }
+      .rank.bronze { color: #bd815d; }
+      .leaderboard-note { margin-top: 13px; color: #97a59f; font-size: 10px; }
+      .modal-backdrop { position: fixed; inset: 0; z-index: 10; display: none; place-items: center; padding: 20px; background: #102e2a77; backdrop-filter: blur(3px); }
+      .modal-backdrop.open { display: grid; }
+      .modal { width: min(450px, 100%); background: #fff; padding: 24px; border-radius: 18px; box-shadow: 0 20px 70px #09201c44; }
+      .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+      .modal h2 { margin: 0; font-size: 19px; }
+      .close-modal { width: 31px; height: 31px; border: 0; border-radius: 50%; background: #f1f6f4; color: #688078; font-size: 18px; }
+      .event-form { display: grid; gap: 13px; }
+      .event-form .field input, .event-form .field select { min-height: 43px; }
+      .event-form .primary-button { margin-top: 3px; }
+      .catch-weight-fields { display: grid; grid-template-columns: 1fr 110px; gap: 12px; }
+      .catch-form { display: grid; gap: 13px; }
+      .catch-form .field input, .catch-form .field select { min-height: 43px; }
+      .catch-form .primary-button { margin-top: 3px; }
+      .mobile-nav { display: none; }
+      .toast { position: fixed; z-index: 20; bottom: 24px; left: 50%; transform: translate(-50%, 20px); opacity: 0; pointer-events: none; padding: 11px 16px; border-radius: 10px; color: #fff; background: #173b35; box-shadow: 0 8px 25px #102e2a33; font-size: 12px; transition: .2s; }
+      .toast.show { opacity: 1; transform: translate(-50%, 0); }
+      @media (max-width: 980px) {
+        .layout { grid-template-columns: 185px minmax(0,1fr); gap: 23px; }
+        .map-layout { grid-template-columns: 1fr; }
+        .conditions-card { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; }
+        .conditions-top, .temp-line, .bite-meter, .condition-list, .best-time { grid-column: auto; }
+        .condition-list { align-content: center; }
+        .best-time { grid-column: 1 / -1; }
+      }
+      @media (max-width: 680px) {
+        .topbar { height: 64px; padding: 0 18px; }
+        .weather-chip { display: none; }
+        .layout { width: calc(100% - 34px); display: block; padding: 25px 0 95px; }
+        .sidebar { display: none; }
+        .mobile-nav { position: fixed; z-index: 6; bottom: 0; left: 0; right: 0; display: grid; grid-template-columns: repeat(4,1fr); padding: 8px 8px calc(8px + env(safe-area-inset-bottom)); background: #ffffffed; border-top: 1px solid var(--line); backdrop-filter: blur(12px); }
+        .mobile-nav .nav-button { display: grid; justify-items: center; gap: 4px; border-radius: 10px; padding: 7px 2px; font-size: 9px; }
+        .mobile-nav .nav-button svg { width: 19px; height: 19px; }
+        .map-heading { align-items: flex-start; flex-direction: column; margin-bottom: 17px; }
+        .map-card { min-height: 370px; padding: 14px; }
+        .globe-stage { height: 268px; }
+        .globe { height: 260px; }
+        .conditions-card { display: block; }
+        .below-grid, .event-grid { grid-template-columns: 1fr; }
+        .section-header { align-items: flex-start; }
+        .section-header .primary-button { padding: 10px; font-size: 10px; }
+        .leaderboard-head, .leader-row { grid-template-columns: 30px minmax(112px,1fr) 78px; padding: 12px 13px; gap: 6px; }
+        .leaderboard-head span:nth-child(3), .leader-row .fish-name { display: none; }
+        .profile-card { padding: 19px; }
+      }
+      @media (max-width: 420px) {
+        .live-pill { font-size: 9px; }
+        .searchbox { gap: 7px; padding: 0 9px; }
+        .searchbox input { font-size: 11px; }
+        .searchbox button { padding: 8px 9px; }
+        .profile-form { grid-template-columns: 1fr; }
+        .stats-row { gap: 6px; }
+        .stat-box { padding: 12px 9px; }
+        .stat-box strong { font-size: 18px; }
+      }
+
+      :root {
+        color-scheme: dark;
+        --ink: #f3f2ed;
+        --muted: #9a9da2;
+        --teal: #82dec2;
+        --teal-dark: #163b35;
+        --mint: #20252c;
+        --paper: #41484e;
+        --line: #30353d;
+        --white: #15181f;
+      }
+      body {
+        background-color: #41484e;
+        background-image:
+          radial-gradient(ellipse at 12% 8%, rgba(130,222,194,.13), transparent 38%),
+          radial-gradient(ellipse at 88% 76%, rgba(240,213,111,.07), transparent 32%),
+          repeating-radial-gradient(ellipse at 14% 22%, transparent 0 42px, rgba(130,222,194,.025) 43px 44px, transparent 45px 82px),
+          repeating-radial-gradient(ellipse at 87% 72%, transparent 0 58px, rgba(255,255,255,.018) 59px 60px, transparent 61px 110px),
+          linear-gradient(135deg, #454c52, #383f45 54%, #41484e);
+        background-attachment: fixed;
+        color: #f3f2ed;
+      }
+      .fish-background { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+      .background-creature { position: absolute; display: none; overflow: visible; opacity: .23; color: #82dec2; transform-box: fill-box; transform-origin: center; }
+      .background-creature.active { display: block; }
+      .background-creature[data-creature="fish"] { width: 104px; height: 52px; }
+      .background-creature[data-creature="shark"] { width: 132px; height: 60px; }
+      .background-creature[data-creature="turtle"] { width: 100px; height: 64px; }
+      .background-creature[data-creature="chase"] { width: 210px; height: 66px; }
+      .background-creature .creature-eye { fill: #41484e; }
+      .background-creature .creature-detail { fill: none; stroke: #41484e; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; opacity: .55; }
+      .background-creature .chase-shark { color: #acb9b7; }
+      .app-shell { position: relative; z-index: 1; }
+      @media (prefers-reduced-motion: reduce) {
+        .fish-background { display: none; }
+      }
+      .topbar { background: #393f45; border-color: #50565c; padding-inline: max(28px, calc((100vw - 1160px) / 2)); }
+      .brand { color: #f3f2ed; }
+      .brand-mark { color: #17201f; background: #81e3c4; border-radius: 50%; }
+      .weather-chip, .weather-chip strong { color: #c6c9c8; }
+      .layout { width: min(1160px, calc(100% - 56px)); display: block; padding-top: 18px; }
+      .sidebar { position: static; margin-bottom: 26px; display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+      .sidebar-label, .side-card { display: none; }
+      .nav-list { display: flex; gap: 8px; }
+      .nav-button { color: #b0b5b7; }
+      .nav-button:hover { color: #fff; background: #50575d; }
+      .nav-button.active { color: #17201f; background: #82dec2; }
+      .page { color: #f3f2ed; }
+      .eyebrow { color: #83ddc2; }
+      h1 { color: #f4f2ee; }
+      .page-intro { color: #b0b5b7; }
+      .map-heading { align-items: center; margin-bottom: 18px; }
+      .map-heading h1 { margin-bottom: 3px; }
+      .live-pill { color: #b4c8c1; background: #343a40; }
+      .card { color: #eeeDE9; background: #171a21; border: 1px solid #363a42; border-radius: 27px; box-shadow: 0 18px 36px #20262c40; }
+      .map-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: stretch; }
+      .map-card { min-height: 0; padding: 15px; }
+      .spot-card { display: flex; flex-direction: column; }
+      .spot-card, .route-card { overflow: hidden; }
+      .searchbox { height: 42px; border: 1px solid #373d45; background: #20242b; border-radius: 13px; }
+      .searchbox input { color: #f2f1ed; }
+      .searchbox input::placeholder { color: #8d9298; }
+      .searchbox svg { color: #a0aaa8; }
+      .searchbox button { color: #16201f; background: #82dec2; }
+      .suggestions { background: #20242b; border-color: #40464d; }
+      .suggestion { color: #f2f1ed; background: #20242b; }
+      .suggestion:hover { background: #303840; }
+      .suggestion small { color: #a2a8aa; }
+      .spot-art { height: 202px; margin: 11px 0 0; border-radius: 19px; display: block; background: #ad6370; overflow: hidden; }
+      .spot-illustration { width: 100%; height: calc(100% - 22px); display: block; object-fit: cover; object-position: center 55%; }
+      .spot-art .map-label { bottom: 0; left: 0; right: 0; height: 22px; display: flex; align-items: center; padding: 0 13px; color: #fff; background: #a85f70; font-size: 9px; text-shadow: none; }
+      .art-badge { position: absolute; left: 12px; top: 12px; padding: 6px 9px; border-radius: 20px; background: #171a21c9; color: #f3c3a5; font-size: 8px; font-weight: 800; letter-spacing: .8px; }
+      .spot-description { display: flex; flex: 1; flex-direction: column; padding: 17px 4px 3px; }
+      .spot-title-line { display: flex; justify-content: space-between; align-items: center; }
+      .spot-title-line h2 { margin: 5px 0 3px; font-size: 19px; letter-spacing: -.5px; }
+      .spot-title-line p { margin: 0; color: #a7aaad; font-size: 10px; }
+      .favorite-mark { color: #e4cf79; font-size: 22px; padding-right: 7px; }
+      .spot-copy { min-height: 62px; max-width: 380px; color: #c1c2c3; font-size: 11px; line-height: 1.65; margin: 16px 0; }
+      .spot-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: auto; padding: 10px 0 13px; border-bottom: 1px solid #30343c; }
+      .spot-stats div { display: grid; grid-template-columns: 19px auto; align-items: center; column-gap: 4px; }
+      .spot-stats div > span { grid-row: 1 / 3; color: #83dec2; font-size: 14px; }
+      .spot-stats strong { font-size: 15px; color: #84dfc2; letter-spacing: -.3px; }
+      .spot-stats small { grid-column: 2; color: #a1a4a7; font-size: 9px; margin-top: 3px; }
+      .spot-actions { display: flex; align-items: center; gap: 8px; padding-top: 12px; }
+      .spot-status { margin-right: auto; display: inline-flex; align-items: center; gap: 6px; color: #c0c3c3; font-size: 10px; }
+      .spot-status i, .route-chip i { width: 7px; height: 7px; border-radius: 50%; background: #7be0bd; display: inline-block; }
+      .round-action, .map-controls button, .map-close { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid #363c44; border-radius: 50%; color: #bec2c5; background: #242932; font-size: 15px; }
+      .round-action.active { border-color: #82dec2; color: #17201f; background: #82dec2; }
+      .route-card { min-height: 0; padding: 0; }
+      .route-map { height: 420px; position: relative; overflow: hidden; border-radius: 26px 26px 0 0; background: #15181f; }
+      .earth-canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; cursor: grab; touch-action: none; }
+      .earth-canvas:active { cursor: grabbing; }
+      .globe-hint { position: absolute; z-index: 2; top: 102px; right: 14px; padding: 6px 8px; border-radius: 20px; background: #242a32d9; color: #99a6a6; font-size: 7px; font-weight: 800; letter-spacing: .7px; pointer-events: none; }
+      .route-map .search-wrap { position: absolute; z-index: 4; top: 55px; left: 14px; right: 14px; }
+      .route-map .searchbox { height: 38px; padding-inline: 9px; background: rgba(28, 33, 40, .9); }
+      .route-map .searchbox input { font-size: 10px; }
+      .route-map .searchbox button { padding: 7px 9px; font-size: 9px; }
+      .route-map .suggestions { background: #20242b; }
+      .route-fish-window { display: flex; align-items: center; gap: 8px; margin-top: 12px; color: #9da3a5; font-size: 8px; font-weight: 800; letter-spacing: .7px; }
+      .route-fish-window strong { color: #e5cf78; font-size: 10px; letter-spacing: 0; }
+      .contours { position: absolute; inset: 0; opacity: .9; }
+      .contours svg { width: 100%; height: 100%; }
+      .route-top { position: absolute; z-index: 2; top: 16px; left: 16px; right: 16px; display: flex; justify-content: space-between; align-items: center; }
+      .route-chip { display: flex; align-items: center; gap: 7px; padding: 8px 10px; border-radius: 20px; color: #c9d0cf; background: #252a32d9; font-size: 8px; font-weight: 800; letter-spacing: 1px; }
+      .route-chip i { width: 6px; height: 6px; }
+      .map-close { width: 28px; height: 28px; color: #e6e5e2; }
+      .ocean-label { position: absolute; top: 56%; left: 16%; color: #4d535e; font-family: Georgia,serif; font-size: 15px; line-height: 1.05; }
+      .route-line { position: absolute; inset: 0; width: 100%; height: 100%; }
+      .route-point { position: absolute; display: grid; place-items: center; border-radius: 50%; box-shadow: 0 0 20px #0007; }
+      .start-point { top: 36%; left: 28%; width: 40px; height: 40px; background: #f28d77; color: #252931; font-size: 18px; }
+      .fish-point { top: 56%; left: 57%; width: 43px; height: 43px; color: #20242a; background: #f0d56f; font-size: 20px; box-shadow: 0 0 0 7px #eacd6630, 0 0 22px #f0d56f70; }
+      .current-point { top: 77%; left: 73%; width: 26px; height: 26px; color: #87e3c4; border: 1px solid #82dec2; background: #1c2930; font-size: 12px; }
+      .route-tooltip { position: absolute; top: 47%; left: 41%; display: grid; gap: 5px; min-width: 112px; padding: 11px 13px; border-radius: 14px; background: #343943ed; box-shadow: 0 8px 20px #090b1050; }
+      .route-tooltip:after { content: ""; position: absolute; bottom: -6px; left: 24px; width: 12px; height: 12px; transform: rotate(45deg); background: #343943; }
+      .route-tooltip small { color: #aeb5b6; font-size: 7px; font-weight: 800; letter-spacing: .7px; }
+      .route-tooltip strong { font-size: 10px; }
+      .route-tooltip span { color: #e0c86e; font-size: 9px; }
+      .route-map .map-label { bottom: 14px; left: 14px; z-index: 2; color: #c1c5c5; font-size: 9px; }
+      .map-controls { position: absolute; bottom: 12px; right: 13px; display: flex; gap: 7px; }
+      .map-controls button { width: 31px; height: 31px; }
+      .route-info { padding: 16px 18px 17px; }
+      .conditions-top { align-items: center; }
+      .conditions-card h2 { color: #f4f2ee; font-size: 15px; margin: 4px 0 3px; }
+      .conditions-card .eyebrow { font-size: 8px; letter-spacing: 1px; }
+      .location-name, .weather-description { color: #a3a7aa; font-size: 10px; }
+      .sun-icon { font-size: 22px; }
+      .route-weather { display: flex; align-items: center; gap: 8px; margin-top: 11px; }
+      .live-status-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 11px; color: #a3a7aa; font-size: 8px; }
+      .live-status-row button { padding: 4px 7px; border: 1px solid #363c44; border-radius: 7px; color: #83dec2; background: #20242b; font-size: 8px; font-weight: 700; }
+      .live-status-row button:disabled { cursor: wait; opacity: .65; }
+      .route-temp { font-size: 25px; font-weight: 750; letter-spacing: -1px; }
+      .bite-summary { display: grid; gap: 2px; margin-left: auto; text-align: right; }
+      .bite-summary span { color: #969ca0; font-size: 8px; }
+      .bite-summary strong { color: #83dec2; font-size: 10px; }
+      .route-condition-list { display: flex; justify-content: space-between; gap: 8px; margin-top: 13px; padding-top: 12px; border-top: 1px solid #30343c; }
+      .route-condition-list span { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 3px 5px; color: #c8c9c7; font-size: 10px; }
+      .route-condition-list small { color: #858b91; font-size: 7px; font-weight: 800; letter-spacing: .7px; }
+      .route-condition-list strong { grid-column: 2; color: #e9e9e5; font-size: 9px; }
+      .weather-attribution { display: block; margin-top: 11px; color: #858b91; font-size: 8px; }
+      .weather-attribution a { color: #83dec2; }
+      .below-grid { margin-top: 20px; }
+      .mini-card, .profile-card, .event-card, .leaderboard-card { background: #171a21; border-color: #363a42; color: #efeeea; }
+      .mini-card h3, .event-card h3, .profile-hero h2 { color: #f4f2ee; }
+      .section-header h1 { color: #f4f2ee; }
+      .event-card .event-location, .event-description, .fish-name, .angler small, .location-name { color: #a4a8aa; }
+      .event-footer, .leader-row { border-color: #30343c; }
+      .leaderboard-head { background: #20242b; color: #9ba2a5; }
+      .leader-row { color: #efeeea; }
+      .empty-state { color: #aeb4b6; }
+      .profile-hero { border-color: #30343c; }
+      .stat-box { background: #20242b; }
+      .field { color: #b5b9b9; }
+      .field input, .field select { color: #f2f1ed; border-color: #3a4048; background: #20242b; }
+      .profile-hero p, .stat-box small { color: #a4a8aa; }
+      .catch-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; }
+      .catch-card { overflow: hidden; border: 1px solid #363a42; border-radius: 14px; background: #171a21; }
+      .catch-photo { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; background: #252a30; }
+      .catch-card-body { padding: 15px; }
+      .catch-card-body h2 { margin: 0 0 5px; font-size: 16px; }
+      .catch-card-meta { color: #a4a8aa; font-size: 10px; line-height: 1.7; }
+      .catch-card-notes { margin: 10px 0 0; color: #d0d2d0; font-size: 11px; line-height: 1.5; overflow-wrap: anywhere; }
+      .catch-card-footer { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 13px; padding-top: 11px; border-top: 1px solid #30343c; }
+      .catch-card-footer strong { color: #82dec2; font-size: 14px; }
+      .delete-catch { border: 0; color: #e6a091; background: transparent; font-size: 10px; font-weight: 700; }
+      .catch-photo-field input { color: #a4a8aa; }
+      .catch-photo-preview { display: none; max-width: 100%; max-height: 190px; border-radius: 9px; object-fit: cover; }
+      .catch-photo-preview.visible { display: block; }
+      .catch-detail-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      .date-block { color: #17332e; background: #82dec2; }
+      .join-button { color: #82dec2; border-color: #3d6b60; background: #20242b; }
+      .join-button.joined { color: #17332e; background: #82dec2; }
+      .primary-button { color: #17201f; background: #82dec2; }
+      .primary-button:hover { background: #a4f0d7; }
+      .text-button { color: #82dec2; }
+      .modal { color: #f3f2ed; background: #171a21; }
+      .close-modal { color: #d8ddda; background: #30353d; }
+      .toast { color: #f3f2ed; background: #20242b; }
+      .mobile-nav { background: #252a30ed; border-color: #41474d; }
+      .mobile-nav .nav-button { color: #aeb4b6; }
+      .mobile-nav .nav-button.active { color: #17201f; }
+      @media (min-width: 681px) {
+        .map-layout { max-width: 760px; margin: 0 auto; }
+        .map-card, .route-card { min-height: 0; }
+        .map-heading { max-width: 760px; margin-inline: auto; }
+      }
+      @media (max-width: 680px) {
+        .topbar { background: #393f45; }
+        .sidebar { display: none; }
+        .layout { width: calc(100% - 28px); padding-top: 18px; }
+        .map-layout { grid-template-columns: 1fr; max-width: 430px; margin: 0 auto; gap: 16px; }
+        .map-heading { max-width: 430px; margin: 0 auto 15px; }
+        .spot-art { height: 202px; }
+        .route-map { height: 420px; }
+        .route-map .search-wrap { left: 11px; right: 11px; }
+        .below-grid { max-width: 430px; margin-inline: auto; }
+        .mobile-nav { background: #252a30ed; }
+        .section-header { gap: 12px; }
+        .community-layout { grid-template-columns: 1fr; }
+      }
+      @media (max-width: 420px) {
+        .spot-stats strong { font-size: 13px; }
+        .spot-status { font-size: 9px; }
+        .route-map { height: 390px; }
+        .route-info { padding: 14px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="fish-background" aria-hidden="true">
+      <svg class="background-creature" data-creature="fish" viewBox="0 0 104 52" focusable="false">
+        <path fill="currentColor" d="M10 26C20 15 35 10 52 12c13 1 24 7 32 14-8 7-19 13-32 14-17 2-32-3-42-14Zm-2 0L0 12v28zm39-13 7-9 6 11zm1 26 7 9 6-11z"/>
+        <circle class="creature-eye" cx="74" cy="23" r="2"/>
+      </svg>
+      <svg class="background-creature" data-creature="shark" viewBox="0 0 132 60" focusable="false">
+        <g transform="translate(124 0) scale(-1 1)">
+          <path fill="currentColor" d="M8 31c17-14 36-20 62-16l26 8 20-10-7 16 7 16-22-9-24 11C45 53 24 46 8 31Zm42-16 18-12 12 16zM47 47l17 11 10-16z"/>
+          <path class="creature-detail" d="m68 16 10 20m9-16-2 12"/>
+          <circle class="creature-eye" cx="105" cy="28" r="2"/>
+        </g>
+      </svg>
+      <svg class="background-creature" data-creature="turtle" viewBox="0 0 100 64" focusable="false">
+        <path fill="currentColor" d="M27 22c2-10 12-16 27-16s25 6 28 16l8 5-8 8c-3 10-13 16-28 16s-25-6-27-16l-8-8zm55 7 8-8 9 2 5 8-7 9-9-1zM35 17l-8-8-8 2-3 8 8 7zm7 31-9 8-9-2-2-8 7-7zm32 0 9 8 9-2 2-8-7-7z"/>
+        <path class="creature-detail" d="M29 28h51M37 17l8 32m24-32-8 32m-17-32 17 32"/>
+        <circle class="creature-eye" cx="96" cy="25" r="1.8"/>
+      </svg>
+      <svg class="background-creature" data-creature="chase" viewBox="0 0 210 66" focusable="false">
+        <g class="chase-shark" transform="translate(0 4) scale(.8)">
+          <g transform="translate(124 0) scale(-1 1)">
+            <path fill="currentColor" d="M8 31c17-14 36-20 62-16l26 8 20-10-7 16 7 16-22-9-24 11C45 53 24 46 8 31Zm42-16 18-12 12 16zM47 47l17 11 10-16z"/>
+            <circle class="creature-eye" cx="105" cy="28" r="2"/>
+          </g>
+        </g>
+        <g transform="translate(105 7) scale(.8)">
+          <path fill="currentColor" d="M10 26C20 15 35 10 52 12c13 1 24 7 32 14-8 7-19 13-32 14-17 2-32-3-42-14Zm-2 0L0 12v28zm39-13 7-9 6 11zm1 26 7 9 6-11z"/>
+          <circle class="creature-eye" cx="74" cy="23" r="2"/>
+        </g>
+      </svg>
+    </div>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="Open Fishing home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M3 12c2.2-3.5 4.4-3.5 6.6 0s4.4 3.5 6.6 0 3.8-3.5 5.8-.6M3 17c2.2-3.5 4.4-3.5 6.6 0s4.4 3.5 6.6 0 3.8-3.5 5.8-.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M12 3v5m-2-3 2 3 2-3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          Open Fishing
+        </a>
+        <div class="topbar-right">
+          <div class="weather-chip"><span>📍</span><span>Fishing near <strong id="top-location">Cape Town</strong></span></div>
+        </div>
+      </header>
+
+      <div class="layout">
+        <aside class="sidebar">
+          <div class="sidebar-label">Your fishing life</div>
+          <nav class="nav-list" aria-label="Main navigation">
+            <button class="nav-button active" data-page="explore" aria-current="page">
+              <svg viewBox="0 0 24 24" fill="none"><circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 4.2 4.2M10.8 7v7.6M7 10.8h7.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>Explore map
+            </button>
+            <button class="nav-button" data-page="events">
+              <svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="16" rx="2.5" stroke="currentColor" stroke-width="1.7"/><path d="M7.5 3v4M16.5 3v4M4 9.5h16M8 13h2m4 0h2m-8 4h2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>Events
+            </button>
+            <button class="nav-button" data-page="catches">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M8 4h8v4a4 4 0 0 1-8 0V4Z" stroke="currentColor" stroke-width="1.7"/><path d="M8 6H4v2a4 4 0 0 0 4 4m8-6h4v2a4 4 0 0 1-4 4M12 12v5m-4 3h8m-7-3h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>My catches
+            </button>
+            <button class="nav-button" data-page="profile">
+              <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.4" stroke="currentColor" stroke-width="1.7"/><path d="M5 20c.4-3.7 3.2-5.5 7-5.5s6.6 1.8 7 5.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>Your profile
+            </button>
+          </nav>
+          <div class="side-card">
+            <small>Make a plan</small>
+            <h3>Your next day<br />on the water</h3>
+            <p>Create an event whenever you're ready to invite other anglers.</p>
+            <button data-goto="events">Create an event <span aria-hidden="true">→</span></button>
+          </div>
+        </aside>
+
+        <main>
+          <section class="page active" id="page-explore" aria-labelledby="explore-title">
+            <div class="map-heading">
+              <div><div class="eyebrow">Find your next cast</div><h1 id="explore-title">Where to today?</h1><p class="page-intro">Explore fishing spots and check current weather and marine conditions.</p></div>
+              <div class="live-pill"><span></span>Live weather &amp; marine data</div>
+            </div>
+            <div class="map-layout">
+              <div class="card map-card spot-card">
+                <div class="globe-stage spot-art">
+                  <img class="spot-illustration" src="fishing-scene-photo.png" alt="Angler seated on a rock while fishing at sunset on a mountain lake" />
+                  <span class="map-label" id="spot-map-label">📍 Cape Town, South Africa</span>
+                </div>
+                <div class="spot-description">
+                  <div class="spot-title-line"><div><div class="eyebrow">Your selected destination</div><h2 id="spot-title">Cape Town coast</h2><p id="spot-subtitle">Atlantic coast · South Africa</p></div><span class="favorite-mark" aria-hidden="true">✦</span></div>
+                  <p class="spot-copy" id="spot-copy">Live local weather and marine conditions load for your selected location.</p>
+                  <div class="spot-stats">
+                    <div><span>☀</span><strong id="spot-weather">—</strong><small id="spot-air-label">Air now</small></div>
+                    <div><span>↗</span><strong id="spot-water">—</strong><small>Sea temp</small></div>
+                    <div><span>◷</span><strong id="spot-best">—</strong><small id="spot-best-label">Sunrise · sunset</small></div>
+                  </div>
+                  <div class="spot-actions">
+                    <span class="spot-status"><i></i> <span id="spot-fish">Live fish reports unavailable</span></span>
+                    <button class="round-action active" aria-label="Fishing spot selected">🎣</button>
+                    <button class="round-action" data-goto="events" aria-label="Find fishing events">↗</button>
+                    <button class="round-action" data-goto="profile" aria-label="Open profile">♙</button>
+                  </div>
+                </div>
+              </div>
+              <aside class="card conditions-card route-card" aria-live="polite" aria-label="Fishing route map and today's conditions">
+                <div class="route-map">
+                  <canvas class="earth-canvas" id="earth-canvas" aria-label="Interactive 3D Earth. Drag to spin the globe."></canvas>
+                  <div class="route-top"><span class="route-chip"><i></i> FISHING MAP</span><button class="map-close" aria-label="Map options">···</button></div>
+                  <div class="search-wrap">
+                    <form class="searchbox" id="location-form">
+                      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 10.2c0 5.2-8 11-8 11s-8-5.8-8-11a8 8 0 1 1 16 0Z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="1.7"/></svg>
+                      <input id="location-input" type="search" autocomplete="off" placeholder="Search any city, town, or place" aria-label="Search fishing location" required />
+                      <button id="location-submit" type="submit">Find</button>
+                    </form>
+                    <div class="suggestions" id="suggestions" role="listbox" aria-label="Suggested fishing locations"></div>
+                  </div>
+                  <span class="globe-hint">DRAG TO SPIN THE EARTH</span>
+                  <div class="map-label" id="map-label">📍 Cape Town, South Africa</div>
+                  <div class="map-controls"><button type="button" id="globe-center" aria-label="Center selected fishing location">⌖</button></div>
+                </div>
+                <div class="route-info">
+                  <div class="conditions-top"><div><div class="eyebrow" id="condition-day">TODAY'S OUTLOOK</div><h2 id="condition-place">Cape Town</h2><div class="location-name" id="condition-country">South Africa · Atlantic coast</div></div><span class="sun-icon" id="weather-symbol" aria-hidden="true">·</span></div>
+                  <div class="live-status-row"><span id="live-status" role="status" aria-live="polite">Loading latest conditions…</span><button type="button" id="refresh-conditions" aria-label="Refresh live fishing conditions">↻ Refresh</button></div>
+                  <div class="route-weather"><span class="route-temp" id="temperature">—</span><span class="weather-description" id="weather-description">Loading current weather…</span><span class="bite-summary"><span>Feels like</span><strong id="feels-like">—</strong></span></div>
+                  <div class="route-condition-list">
+                    <span>🌬 <small>WIND</small><strong id="wind">Loading…</strong></span>
+                    <span>🌊 <small>WAVES</small><strong id="wave">Loading…</strong></span>
+                    <span>↕ <small>TIDE</small><strong id="tide">Not available</strong></span>
+                  </div>
+                  <div class="route-fish-window"><span id="best-time-label">SUNRISE · SUNSET</span><strong id="best-time">—</strong></div>
+                  <small class="weather-attribution" id="weather-attribution">Weather and marine forecast by <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo.com</a>. Model data, refreshed every 30 minutes.</small>
+                </div>
+              </aside>
+            </div>
+          </section>
+
+          <section class="page" id="page-events" aria-labelledby="events-title">
+            <div class="section-header"><div><div class="eyebrow">Get out there together</div><h1 id="events-title">Fishing events</h1><p class="page-intro">Make a day of it. Find a local trip or host one of your own.</p></div><button class="primary-button" id="open-event">＋ Create an event</button></div>
+            <div class="event-grid" id="event-grid"></div>
+          </section>
+
+          <section class="page" id="page-catches" aria-labelledby="catches-title">
+            <div class="section-header"><div><div class="eyebrow">Your personal logbook</div><h1 id="catches-title">My catches</h1><p class="page-intro">Photos, weights, and details from your time on the water.</p></div><button class="primary-button" id="open-catch">＋ Log a catch</button></div>
+            <div class="catch-grid" id="catch-grid" aria-live="polite"><div class="empty-state">Loading your catch log…</div></div>
+          </section>
+
+          <section class="page" id="page-profile" aria-labelledby="profile-title">
+            <div class="section-header"><div><div class="eyebrow">Your angler card</div><h1 id="profile-title">Your profile</h1><p class="page-intro">A little about the person behind the rod.</p><small class="database-status" id="database-status" role="status">Connecting to local SQLite database…</small></div></div>
+            <div class="card profile-card">
+              <div class="profile-hero">
+                <div class="profile-avatar" id="profile-avatar"><span id="profile-avatar-initials">?</span><img id="profile-avatar-image" alt="Your profile picture" hidden /></div>
+                <div class="profile-photo-actions">
+                  <label class="profile-photo-button" for="profile-picture-input">Choose profile picture</label>
+                  <input id="profile-picture-input" type="file" accept="image/*" hidden />
+                  <span class="profile-photo-help">Image files up to 8 MB</span>
+                </div>
+                <div><h2 id="profile-name-display">Set up your profile</h2><p id="profile-location-display">Add your details below to get started.</p></div>
+              </div>
+              <form class="profile-form" id="profile-form">
+                <label class="field">Your name<input id="profile-name" maxlength="40" placeholder="Name" required /></label>
+                <label class="field">Home waters<input id="profile-location" maxlength="60" placeholder="City, country" /></label>
+                <label class="field">Favourite fishing style<select id="profile-style"><option value="">Choose a style</option><option>Shore fishing</option><option>Fly fishing</option><option>Boat fishing</option><option>Freshwater fishing</option><option>Still finding my style</option></select></label>
+                <label class="field">Fishing gear (optional)<input id="profile-gear" maxlength="80" placeholder="e.g. spinning rod, fly rod, handline" /></label>
+                <button class="primary-button" type="submit">Save profile</button><span class="saved-message" id="saved-message" aria-live="polite"></span>
+              </form>
+            </div>
+          </section>
+        </main>
+      </div>
+      <nav class="mobile-nav" aria-label="Main navigation">
+        <button class="nav-button active" data-page="explore" aria-current="page"><svg viewBox="0 0 24 24" fill="none"><circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 4.2 4.2M10.8 7v7.6M7 10.8h7.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>Explore</button>
+        <button class="nav-button" data-page="events"><svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="16" rx="2.5" stroke="currentColor" stroke-width="1.7"/><path d="M7.5 3v4M16.5 3v4M4 9.5h16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>Events</button>
+        <button class="nav-button" data-page="catches"><svg viewBox="0 0 24 24" fill="none"><path d="M8 4h8v4a4 4 0 0 1-8 0V4Z" stroke="currentColor" stroke-width="1.7"/><path d="M8 6H4v2a4 4 0 0 0 4 4m8-6h4v2a4 4 0 0 1-4 4M12 12v5m-4 3h8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>My catches</button>
+        <button class="nav-button" data-page="profile"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.4" stroke="currentColor" stroke-width="1.7"/><path d="M5 20c.4-3.7 3.2-5.5 7-5.5s6.6 1.8 7 5.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>Profile</button>
+      </nav>
+    </div>
+
+    <div class="modal-backdrop" id="event-modal" role="dialog" aria-modal="true" aria-labelledby="event-modal-title">
+      <div class="modal">
+        <div class="modal-head"><h2 id="event-modal-title">Create a fishing event</h2><button class="close-modal" id="close-event" aria-label="Close">×</button></div>
+        <form class="event-form" id="event-form">
+          <label class="field">Event name<input name="title" maxlength="60" placeholder="Sunrise on the pier" required /></label>
+          <label class="field">Where are you meeting?<input name="location" maxlength="70" placeholder="Fishing spot, city" required /></label>
+          <label class="field">Date<input name="date" type="date" required /></label>
+          <label class="field">A few details<input name="description" maxlength="120" placeholder="What should people know?" /></label>
+          <button class="primary-button" type="submit">Publish event</button>
+        </form>
+      </div>
+    </div>
+    <div class="modal-backdrop" id="catch-modal" role="dialog" aria-modal="true" aria-labelledby="catch-modal-title">
+      <div class="modal">
+        <div class="modal-head"><h2 id="catch-modal-title">Log a catch</h2><button class="close-modal" id="close-catch" aria-label="Close">×</button></div>
+        <form class="catch-form" id="catch-form">
+          <label class="field">Fish species<input name="fish" maxlength="70" placeholder="e.g. Atlantic cod" required /></label>
+          <div class="catch-weight-fields">
+            <label class="field">Weight<input name="weight" type="number" min="0.01" step="0.01" placeholder="0.00" required /></label>
+            <label class="field">Unit<select name="unit"><option value="kg">kg</option><option value="lb">lb</option></select></label>
+          </div>
+          <div class="catch-detail-fields">
+            <label class="field">Caught on<input name="caught_at" type="date" required /></label>
+            <label class="field">Where<input name="location" maxlength="80" placeholder="Fishing spot" /></label>
+          </div>
+          <label class="field">Notes<input name="notes" maxlength="400" placeholder="Bait, conditions, or anything to remember" /></label>
+          <label class="field catch-photo-field">Catch photo<input name="photo" type="file" accept="image/jpeg,image/png" required /><small>JPG or PNG up to 8 MB</small></label>
+          <img class="catch-photo-preview" id="catch-photo-preview" alt="Selected catch preview" />
+          <button class="primary-button" type="submit">Save catch</button>
+        </form>
+      </div>
+    </div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <!-- Local public-domain Natural Earth coastline data for the interactive globe. -->
+    <script src="earth-data.js"></script>
+    <script>
+      const destinations = [
+        { name: "Cape Town", country: "South Africa", coast: "Atlantic coast", aliases: ["cape town", "south africa"], lat: -33.9, lon: 18.4 },
+        { name: "Honolulu", country: "Hawaii, USA", coast: "Pacific Ocean", aliases: ["honolulu", "hawaii", "oahu"], lat: 21.3, lon: -157.8 },
+        { name: "Reykjavik", country: "Iceland", coast: "North Atlantic", aliases: ["reykjavik", "iceland"], lat: 64.1, lon: -21.9 },
+        { name: "Sydney", country: "Australia", coast: "Tasman Sea", aliases: ["sydney", "australia"], lat: -33.9, lon: 151.2 },
+        { name: "Vancouver", country: "Canada", coast: "Pacific coast", aliases: ["vancouver", "canada"], lat: 49.3, lon: -123.1 },
+        { name: "Lisbon", country: "Portugal", coast: "Atlantic coast", aliases: ["lisbon", "portugal"], lat: 38.7, lon: -9.1 },
+        { name: "Tokyo", country: "Japan", coast: "Pacific coast", aliases: ["tokyo", "japan"], lat: 35.7, lon: 139.7 },
+        { name: "Miami", country: "Florida, USA", coast: "Atlantic coast", aliases: ["miami", "florida"], lat: 25.8, lon: -80.2 },
+        { name: "Auckland", country: "New Zealand", coast: "Hauraki Gulf", aliases: ["auckland", "new zealand"], lat: -36.8, lon: 174.8 }
+      ];
+      const backgroundCreatures = Array.from(document.querySelectorAll(".background-creature"));
+      if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches && backgroundCreatures.length) {
+        const swimBackgroundCreature = () => {
+          const roll = Math.random();
+          const creature = roll < .04 ? "chase" : roll < .74 ? "fish" : roll < .87 ? "shark" : "turtle";
+          const direction = 1;
+          const selectedCreature = backgroundCreatures.find(item => item.dataset.creature === creature);
+          const width = selectedCreature.viewBox.baseVal.width;
+          const distance = window.innerWidth + width;
+          const speed = 45 + Math.random() * 55;
+          const duration = distance / speed * 1000;
+          const startX = direction === 1 ? -width : window.innerWidth;
+          const endX = direction === 1 ? window.innerWidth : -width;
+          const travel = endX - startX;
+          selectedCreature.style.top = `${12 + Math.random() * 76}vh`;
+          selectedCreature.classList.add("active");
+          selectedCreature.dataset.direction = direction === 1 ? "right" : "left";
+          selectedCreature.dataset.speed = speed.toFixed(0);
+          selectedCreature.dataset.duration = duration.toFixed(0);
+          selectedCreature.animate([
+            { transform: `translateX(${startX}px) scaleX(${direction})`, opacity: 0 },
+            { transform: `translateX(${startX + travel * .05}px) scaleX(${direction})`, opacity: .23, offset: .05 },
+            { transform: `translateX(${startX + travel * .94}px) scaleX(${direction})`, opacity: .23, offset: .94 },
+            { transform: `translateX(${endX}px) scaleX(${direction})`, opacity: 0 }
+          ], {
+            duration,
+            easing: "linear",
+            fill: "forwards"
+          }).onfinish = () => {
+            selectedCreature.classList.remove("active");
+            window.setTimeout(swimBackgroundCreature, 5000);
+          };
+        };
+        swimBackgroundCreature();
+      }
+
+      const databaseStateKeys = [
+        "castaway-profile",
+        "castaway-catches",
+        "castaway-events",
+        "castaway-joined",
+        "castaway-destination"
+      ];
+      const pendingDatabaseWrites = new Map();
+      const databaseWriteChains = new Map();
+      let databaseConnected = false;
+      const storedDestination = load("castaway-destination", destinations[0]);
+      const initialDestination = storedDestination && typeof storedDestination === "object"
+        && Number.isFinite(storedDestination.lat) && Number.isFinite(storedDestination.lon)
+        ? storedDestination
+        : destinations[0];
+      const state = {
+        destination: initialDestination,
+        events: load("castaway-events", []),
+        joined: load("castaway-joined", []),
+        catches: load("castaway-catches", []),
+        profile: load("castaway-profile", { name: "", location: "", style: "", picture: "" })
+      };
+      if (!Array.isArray(state.catches)) state.catches = [];
+      const sampleEventTitles = new Set([
+        "Sunrise on the harbour", "Pier fishing for beginners",
+        "Golden hour casting", "Weekend catch & release"
+      ]);
+      const savedEvents = Array.isArray(state.events) ? state.events : [];
+      state.events = savedEvents.filter(event => !sampleEventTitles.has(event.title));
+      if (state.events.length !== savedEvents.length) save("castaway-events", state.events);
+      pendingDatabaseWrites.clear();
+
+      const earthCanvas = document.getElementById("earth-canvas");
+      const earthContext = earthCanvas.getContext("2d");
+      let earthYaw = state.destination.lon;
+      let earthPitch = state.destination.lat;
+      let earthDragging = false;
+      let earthLastPoint = null;
+      const earthTextureCanvas = document.createElement("canvas");
+      earthTextureCanvas.width = 1440;
+      earthTextureCanvas.height = 720;
+      const earthTextureContext = earthTextureCanvas.getContext("2d");
+      const projectedLandCanvas = document.createElement("canvas");
+      const projectedLandContext = projectedLandCanvas.getContext("2d");
+      let earthTexturePixels;
+      if (!Array.isArray(window.earthLandRings) || window.earthLandRings.length === 0) {
+        throw new Error("Earth coastline data did not load.");
+      }
+      for (const ring of window.earthLandRings) {
+        if (!Array.isArray(ring) || ring.length < 4) continue;
+        const unwrapped = [];
+        let previousLongitude = ring[0][0];
+        for (const [longitude, latitude] of ring) {
+          let adjustedLongitude = longitude;
+          while (adjustedLongitude - previousLongitude > 180) adjustedLongitude -= 360;
+          while (adjustedLongitude - previousLongitude < -180) adjustedLongitude += 360;
+          unwrapped.push([adjustedLongitude, latitude]);
+          previousLongitude = adjustedLongitude;
+        }
+        for (const shift of [-360, 0, 360]) {
+          earthTextureContext.beginPath();
+          unwrapped.forEach(([longitude, latitude], index) => {
+            const x = (longitude + shift + 180) / 360 * earthTextureCanvas.width;
+            const y = (90 - latitude) / 180 * earthTextureCanvas.height;
+            if (index === 0) earthTextureContext.moveTo(x, y);
+            else earthTextureContext.lineTo(x, y);
+          });
+          earthTextureContext.closePath();
+          earthTextureContext.fillStyle = "#7fa88a";
+          earthTextureContext.strokeStyle = "#9bc39d";
+          earthTextureContext.lineWidth = 1;
+          earthTextureContext.fill();
+          earthTextureContext.stroke();
+        }
+      }
+      earthTexturePixels = earthTextureContext.getImageData(0, 0, earthTextureCanvas.width, earthTextureCanvas.height);
+      function projectEarth(lat, lon, cx, cy, radius) {
+        const latitude = lat * Math.PI / 180;
+        const longitude = (lon - earthYaw) * Math.PI / 180;
+        const centerLatitude = earthPitch * Math.PI / 180;
+        const z = Math.sin(latitude) * Math.sin(centerLatitude) + Math.cos(latitude) * Math.cos(longitude) * Math.cos(centerLatitude);
+        return {
+          x: cx + radius * Math.cos(latitude) * Math.sin(longitude),
+          y: cy - radius * (Math.sin(latitude) * Math.cos(centerLatitude) - Math.cos(latitude) * Math.cos(longitude) * Math.sin(centerLatitude)),
+          z
+        };
+      }
+      function drawEarth() {
+        const bounds = earthCanvas.getBoundingClientRect();
+        if (!bounds.width || !bounds.height) return;
+        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+        const width = Math.round(bounds.width * ratio);
+        const height = Math.round(bounds.height * ratio);
+        if (earthCanvas.width !== width || earthCanvas.height !== height) {
+          earthCanvas.width = width;
+          earthCanvas.height = height;
+        }
+        const ctx = earthContext;
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        ctx.clearRect(0, 0, bounds.width, bounds.height);
+        const cx = bounds.width / 2;
+        const cy = bounds.height * .51;
+        const radius = Math.min(bounds.width * .44, bounds.height * .39, 195);
+
+        if (projectedLandCanvas.width !== width || projectedLandCanvas.height !== height) {
+          projectedLandCanvas.width = width;
+          projectedLandCanvas.height = height;
+        }
+        const landImage = projectedLandContext.createImageData(width, height);
+        const pixels = landImage.data;
+        const texture = earthTexturePixels.data;
+        const centerLatitude = earthPitch * Math.PI / 180;
+        const sinCenter = Math.sin(centerLatitude);
+        const cosCenter = Math.cos(centerLatitude);
+
+        ctx.save();
+        ctx.shadowColor = "#05080d";
+        ctx.shadowBlur = 25;
+        ctx.shadowOffsetY = 13;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + radius + 10, radius * .66, 10, 0, 0, Math.PI * 2);
+        ctx.fillStyle = "#080c11";
+        ctx.fill();
+        ctx.restore();
+
+        const ocean = ctx.createRadialGradient(cx - radius * .3, cy - radius * .35, radius * .08, cx, cy, radius * 1.15);
+        ocean.addColorStop(0, "#28535a");
+        ocean.addColorStop(.66, "#16353c");
+        ocean.addColorStop(1, "#0b1c25");
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.fillStyle = ocean;
+        ctx.fill();
+        ctx.strokeStyle = "rgba(156, 207, 195, .2)";
+        ctx.lineWidth = .75;
+        for (let latitude = -60; latitude <= 60; latitude += 30) {
+          ctx.beginPath();
+          let drawing = false;
+          for (let longitude = -180; longitude <= 180; longitude += 3) {
+            const point = projectEarth(latitude, longitude, cx, cy, radius);
+            if (point.z > 0) {
+              if (!drawing) ctx.moveTo(point.x, point.y);
+              else ctx.lineTo(point.x, point.y);
+              drawing = true;
+            } else drawing = false;
+          }
+          ctx.stroke();
+        }
+        for (let longitude = -180; longitude < 180; longitude += 30) {
+          ctx.beginPath();
+          let drawing = false;
+          for (let latitude = -89; latitude <= 89; latitude += 2) {
+            const point = projectEarth(latitude, longitude, cx, cy, radius);
+            if (point.z > 0) {
+              if (!drawing) ctx.moveTo(point.x, point.y);
+              else ctx.lineTo(point.x, point.y);
+              drawing = true;
+            } else drawing = false;
+          }
+          ctx.stroke();
+        }
+        const left = Math.max(0, Math.floor((cx - radius) * ratio));
+        const right = Math.min(width - 1, Math.ceil((cx + radius) * ratio));
+        const top = Math.max(0, Math.floor((cy - radius) * ratio));
+        const bottom = Math.min(height - 1, Math.ceil((cy + radius) * ratio));
+        for (let py = top; py <= bottom; py++) {
+          const screenY = (py + .5) / ratio;
+          const globeY = (screenY - cy) / radius;
+          for (let px = left; px <= right; px++) {
+            const screenX = (px + .5) / ratio;
+            const globeX = (screenX - cx) / radius;
+            const depthSquared = 1 - globeX * globeX - globeY * globeY;
+            if (depthSquared <= 0) continue;
+            const depth = Math.sqrt(depthSquared);
+            const localY = -globeY;
+            const sinLatitude = Math.max(-1, Math.min(1, localY * cosCenter + depth * sinCenter));
+            const latitude = Math.asin(sinLatitude);
+            const cosLatitude = Math.max(.0001, Math.cos(latitude));
+            const cosLongitude = (depth * cosCenter - localY * sinCenter) / cosLatitude;
+            const sinLongitude = globeX / cosLatitude;
+            let longitude = Math.atan2(sinLongitude, cosLongitude) * 180 / Math.PI + earthYaw;
+            longitude = ((longitude + 180) % 360 + 360) % 360;
+            const textureX = Math.min(earthTextureCanvas.width - 1, Math.floor(longitude / 360 * earthTextureCanvas.width));
+            const textureY = Math.min(earthTextureCanvas.height - 1, Math.floor((90 - latitude * 180 / Math.PI) / 180 * earthTextureCanvas.height));
+            const textureIndex = (textureY * earthTextureCanvas.width + textureX) * 4;
+            if (texture[textureIndex + 3] === 0) continue;
+            const light = Math.max(.45, Math.min(1, .52 + (-globeX * -.35 - localY * .3 + depth * .7) * .48));
+            const pixelIndex = (py * width + px) * 4;
+            pixels[pixelIndex] = texture[textureIndex] * light;
+            pixels[pixelIndex + 1] = texture[textureIndex + 1] * light;
+            pixels[pixelIndex + 2] = texture[textureIndex + 2] * light;
+            pixels[pixelIndex + 3] = 255;
+        }
+        }
+        projectedLandContext.putImageData(landImage, 0, 0);
+        ctx.drawImage(projectedLandCanvas, 0, 0, bounds.width, bounds.height);
+
+        if (state.destination.hasOffshoreRoute === true) {
+          const routeLongitudeDelta = ((state.destination.seaLon - state.destination.lon + 540) % 360) - 180;
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(cx, cy, radius - 1, 0, Math.PI * 2);
+          ctx.clip();
+          ctx.beginPath();
+          let routeDrawing = false;
+          for (let step = 0; step <= 32; step++) {
+            const progress = step / 32;
+            const point = projectEarth(
+              state.destination.lat + (state.destination.seaLat - state.destination.lat) * progress,
+              state.destination.lon + routeLongitudeDelta * progress,
+              cx, cy, radius
+            );
+            if (point.z > 0) {
+              if (!routeDrawing) ctx.moveTo(point.x, point.y);
+              else ctx.lineTo(point.x, point.y);
+              routeDrawing = true;
+            } else {
+              routeDrawing = false;
+            }
+          }
+          ctx.strokeStyle = "#7be0bd";
+          ctx.lineWidth = 2;
+          ctx.shadowColor = "#75dabc";
+          ctx.shadowBlur = 8;
+          ctx.setLineDash([3, 5]);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.shadowBlur = 0;
+
+          const seaPoint = projectEarth(state.destination.seaLat, state.destination.seaLon, cx, cy, radius);
+          if (seaPoint.z > 0) {
+            ctx.beginPath();
+            ctx.arc(seaPoint.x, seaPoint.y, 9, 0, Math.PI * 2);
+            ctx.fillStyle = "rgba(240, 213, 111, .22)";
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(seaPoint.x, seaPoint.y, 4.5, 0, Math.PI * 2);
+            ctx.fillStyle = "#f0d56f";
+            ctx.strokeStyle = "#fff3b7";
+            ctx.lineWidth = 1.5;
+            ctx.fill();
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+        const selected = projectEarth(state.destination.lat, state.destination.lon, cx, cy, radius);
+        if (selected.z > 0) {
+          ctx.beginPath();
+          ctx.arc(selected.x, selected.y, 10, 0, Math.PI * 2);
+          ctx.fillStyle = "rgba(242, 141, 119, .2)";
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(selected.x, selected.y, 5, 0, Math.PI * 2);
+          ctx.fillStyle = "#f28d77";
+          ctx.strokeStyle = "#fff1dd";
+          ctx.lineWidth = 2;
+          ctx.fill();
+          ctx.stroke();
+        }
+        ctx.restore();
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.strokeStyle = "rgba(140, 197, 187, .4)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+      earthCanvas.addEventListener("pointerdown", event => {
+        earthDragging = true;
+        earthLastPoint = { x: event.clientX, y: event.clientY };
+        earthCanvas.setPointerCapture(event.pointerId);
+      });
+      earthCanvas.addEventListener("pointermove", event => {
+        if (!earthDragging || !earthLastPoint) return;
+        const bounds = earthCanvas.getBoundingClientRect();
+        earthYaw -= (event.clientX - earthLastPoint.x) * 360 / Math.max(bounds.width, 1);
+        earthPitch = Math.max(-78, Math.min(78, earthPitch + (event.clientY - earthLastPoint.y) * 180 / Math.max(bounds.height, 1)));
+        earthLastPoint = { x: event.clientX, y: event.clientY };
+        drawEarth();
+      });
+      earthCanvas.addEventListener("pointerup", () => { earthDragging = false; earthLastPoint = null; });
+      earthCanvas.addEventListener("pointercancel", () => { earthDragging = false; earthLastPoint = null; });
+      document.getElementById("globe-center").addEventListener("click", () => {
+        earthYaw = state.destination.lon;
+        earthPitch = state.destination.lat;
+        drawEarth();
+      });
+      new ResizeObserver(drawEarth).observe(earthCanvas);
+
+      function dateOffset(days) {
+        const date = new Date();
+        date.setDate(date.getDate() + days);
+        return date.toISOString().slice(0, 10);
+      }
+      function load(key, fallback) {
+        try {
+          const saved = localStorage.getItem(key);
+          return saved ? JSON.parse(saved) : fallback;
+        } catch (error) {
+          console.warn("Could not load saved Castaway data.", error);
+          return fallback;
+        }
+      }
+      function save(key, value) {
+        const serialized = JSON.stringify(value);
+        try {
+          localStorage.setItem(key, serialized);
+        } catch (error) {
+          console.warn("Could not save Castaway data.", error);
+          if (!databaseConnected) {
+            showToast("Could not save changes on this device.");
+            return false;
+          }
+        }
+        pendingDatabaseWrites.set(key, serialized);
+        if (databaseConnected) persistDatabaseValue(key, serialized);
+        return true;
+      }
+      function persistDatabaseValue(key, serialized) {
+        const previousWrite = databaseWriteChains.get(key) || Promise.resolve();
+        const write = previousWrite.catch(() => {}).then(async () => {
+          const response = await fetch(`/api/state/${encodeURIComponent(key)}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: serialized
+          });
+          if (!response.ok) throw new Error(`SQLite save failed (HTTP ${response.status}).`);
+          if (pendingDatabaseWrites.get(key) === serialized) pendingDatabaseWrites.delete(key);
+        });
+        databaseWriteChains.set(key, write);
+        write.catch(error => {
+          console.error(`Could not save ${key} to the SQLite database.`, error);
+          const status = document.getElementById("database-status");
+          if (status) status.textContent = "SQLite save failed. Check that the local app server is running.";
+          showToast("Could not save to SQLite. Check that the local app server is running.");
+        });
+      }
+      async function initializeDatabase() {
+        const status = document.getElementById("database-status");
+        try {
+          const response = await fetch("/api/state", { cache: "no-store" });
+          if (!response.ok) throw new Error(`SQLite connection failed (HTTP ${response.status}).`);
+          const storedState = await response.json();
+          const defaults = {
+            "castaway-profile": { name: "", location: "", style: "", gear: "", picture: "" },
+            "castaway-catches": [],
+            "castaway-events": [],
+            "castaway-joined": [],
+            "castaway-destination": destinations[0]
+          };
+          for (const key of databaseStateKeys) {
+            const pending = pendingDatabaseWrites.get(key);
+            const hasDatabaseValue = Object.prototype.hasOwnProperty.call(storedState, key);
+            let value;
+            if (pending !== undefined) {
+              value = JSON.parse(pending);
+            } else if (hasDatabaseValue) {
+              value = storedState[key];
+            } else {
+              const localValue = localStorage.getItem(key);
+              value = localValue === null ? defaults[key] : load(key, defaults[key]);
+              pendingDatabaseWrites.set(key, JSON.stringify(value));
+            }
+            switch (key) {
+              case "castaway-profile":
+                state.profile = value && typeof value === "object" && !Array.isArray(value)
+                  ? { ...defaults[key], ...value }
+                  : defaults[key];
+                value = state.profile;
+                break;
+              case "castaway-catches":
+                state.catches = Array.isArray(value) ? value : [];
+                value = state.catches;
+                break;
+              case "castaway-events":
+                state.events = Array.isArray(value) ? value : [];
+                value = state.events;
+                break;
+              case "castaway-joined":
+                state.joined = Array.isArray(value) ? value : [];
+                value = state.joined;
+                break;
+              case "castaway-destination":
+                state.destination = value && typeof value === "object"
+                  && Number.isFinite(value.lat) && Number.isFinite(value.lon)
+                  ? value
+                  : destinations[0];
+                value = state.destination;
+                break;
+            }
+            try {
+              localStorage.setItem(key, JSON.stringify(value));
+            } catch (error) {
+              console.warn(`Could not cache ${key} in this browser.`, error);
+            }
+          }
+          databaseConnected = true;
+          status.textContent = "Your profile, catches, and events are saved to SQLite on this PC.";
+          renderEvents();
+          renderCatchLog();
+          renderProfile();
+          renderDestination(state.destination);
+          for (const key of databaseStateKeys) {
+            const pending = pendingDatabaseWrites.get(key);
+            if (pending !== undefined) persistDatabaseValue(key, pending);
+          }
+        } catch (error) {
+          console.error("Could not connect to the local SQLite database.", error);
+          status.textContent = "SQLite is not connected. Start the app with Start-Open-Fishing.bat.";
+          showToast("SQLite is not connected. Start the app with Start-Open-Fishing.bat.");
+        }
+        lookupLocation("", state.destination);
+      }
+      function showToast(message) {
+        const toast = document.getElementById("toast");
+        toast.textContent = message;
+        toast.classList.add("show");
+        clearTimeout(showToast.timeout);
+        showToast.timeout = setTimeout(() => toast.classList.remove("show"), 2400);
+      }
+      function navigate(page) {
+        document.querySelectorAll(".page").forEach(section => section.classList.toggle("active", section.id === `page-${page}`));
+        document.querySelectorAll(".nav-button[data-page]").forEach(button => {
+          const active = button.dataset.page === page;
+          button.classList.toggle("active", active);
+          if (active) button.setAttribute("aria-current", "page");
+          else button.removeAttribute("aria-current");
+        });
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+      document.querySelectorAll(".nav-button[data-page]").forEach(button => button.addEventListener("click", () => navigate(button.dataset.page)));
+      document.querySelectorAll("[data-goto]").forEach(button => button.addEventListener("click", () => navigate(button.dataset.goto)));
+
+      function renderDestination(place) {
+        state.destination = place;
+        const hasCurrentData = Boolean(place.liveUpdated);
+        document.getElementById("condition-place").textContent = place.name;
+        document.getElementById("condition-country").textContent = `${place.coast} · ${place.country}`;
+        document.getElementById("spot-title").textContent = place.name;
+        document.getElementById("spot-subtitle").textContent = `${place.coast} · ${place.country}`;
+        document.getElementById("spot-copy").textContent = "Live weather, wind, wave conditions, sea temperature, and daylight for this location. Tide predictions and local fish reports are not included.";
+        document.getElementById("spot-weather").textContent = hasCurrentData ? place.temp : "—";
+        document.getElementById("spot-water").textContent = hasCurrentData ? place.water : "—";
+        document.getElementById("spot-best").textContent = hasCurrentData && place.best ? place.best.split(" · ")[0] : "—";
+        document.getElementById("spot-air-label").textContent = "Air now";
+        document.getElementById("spot-best-label").textContent = "Sunrise";
+        document.getElementById("temperature").textContent = hasCurrentData ? place.temp : "—";
+        document.getElementById("weather-description").textContent = hasCurrentData ? place.weather : "Loading current weather…";
+        document.getElementById("weather-symbol").textContent = hasCurrentData ? place.symbol : "·";
+        document.getElementById("feels-like").textContent = hasCurrentData ? place.feelsLike : "—";
+        document.getElementById("wind").textContent = hasCurrentData ? place.wind : "Loading…";
+        document.getElementById("wave").textContent = hasCurrentData ? place.wave : "Loading…";
+        document.getElementById("tide").textContent = "Not available";
+        document.getElementById("best-time").textContent = hasCurrentData ? place.best : "Loading…";
+        document.getElementById("spot-fish").textContent = "Live fish reports unavailable";
+        document.getElementById("live-status").textContent = place.liveUpdated
+          ? `Model data · updated ${place.liveUpdated}`
+          : "Loading latest conditions…";
+        document.getElementById("spot-map-label").textContent = `📍 ${place.name}, ${place.country}`;
+        document.getElementById("map-label").textContent = `📍 ${place.name}, ${place.country}`;
+        document.getElementById("top-location").textContent = place.name;
+        if (place.timezone) {
+          document.getElementById("condition-day").textContent = new Intl.DateTimeFormat(undefined, {
+            weekday: "long", month: "short", day: "numeric", timeZone: place.timezone
+          }).format(new Date()).toUpperCase();
+        } else {
+          document.getElementById("condition-day").textContent = new Date().toLocaleDateString(undefined, {
+            weekday: "long", month: "short", day: "numeric"
+          }).toUpperCase();
+        }
+        earthYaw = place.lon;
+        earthPitch = place.lat;
+        drawEarth();
+        document.getElementById("location-input").value = "";
+        document.getElementById("suggestions").classList.remove("open");
+        renderEvents();
+      }
+
+      const input = document.getElementById("location-input");
+      const suggestions = document.getElementById("suggestions");
+      const submitButton = document.getElementById("location-submit");
+      let suggestionController;
+      let lookupController;
+      let suggestionTimer;
+      function showSuggestions(query) {
+        const normalized = query.trim().toLowerCase();
+        const matches = normalized ? destinations.filter(place => `${place.name} ${place.country} ${place.coast} ${place.aliases.join(" ")}`.toLowerCase().includes(normalized)).slice(0, 5) : destinations.slice(0, 5);
+        suggestionController?.abort();
+        suggestionController = null;
+        suggestions.replaceChildren();
+        matches.forEach(place => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "suggestion";
+          button.setAttribute("role", "option");
+          button.textContent = place.name;
+          const detail = document.createElement("small");
+          detail.textContent = `${place.country} · ${place.coast}`;
+          button.append(detail);
+          button.addEventListener("click", () => lookupLocation(`${place.name}, ${place.country}`));
+          suggestions.append(button);
+        });
+        suggestions.classList.add("open");
+        clearTimeout(suggestionTimer);
+        if (normalized.length >= 2) {
+          if (matches.length === 0) setSuggestionMessage("Searching locations…");
+          suggestionTimer = setTimeout(() => loadLocationSuggestions(query, matches), 300);
+        } else if (!matches.length) {
+          setSuggestionMessage("Type at least two characters to search the world.");
+        }
+      }
+      function setSuggestionMessage(message) {
+        const item = document.createElement("div");
+        item.className = "suggestion";
+        item.textContent = message;
+        suggestions.append(item);
+      }
+      async function fetchGeocoding(query, signal) {
+        const url = new URL("https://geocoding-api.open-meteo.com/v1/search");
+        url.search = new URLSearchParams({ name: query, count: "5", language: "en", format: "json" });
+        const response = await fetch(url, { signal });
+        if (!response.ok) throw new Error(`Location search failed (${response.status}).`);
+        const data = await response.json();
+        return Array.isArray(data.results) ? data.results : [];
+      }
+      async function loadLocationSuggestions(query, existingMatches) {
+        suggestionController?.abort();
+        const controller = new AbortController();
+        suggestionController = controller;
+        try {
+          const results = await fetchGeocoding(query, controller.signal);
+          if (controller.signal.aborted || !suggestions.classList.contains("open") || input.value.trim() !== query.trim()) return;
+          const existing = new Set(existingMatches.map(place => `${place.name.toLowerCase()}|${place.country.toLowerCase()}`));
+          const additional = results.filter(place => !existing.has(`${place.name.toLowerCase()}|${place.country.toLowerCase()}`));
+          suggestions.replaceChildren();
+          existingMatches.forEach(place => appendLocationSuggestion(place, false));
+          additional.forEach(place => appendLocationSuggestion(place, true));
+          if (suggestions.childElementCount === 0) setSuggestionMessage("No matching places found. Try another spelling or a nearby town.");
+        } catch (error) {
+          if (error.name === "AbortError") return;
+          console.error("Could not search for locations.", error);
+          if (suggestions.classList.contains("open")) setSuggestionMessage("Could not search locations. Press Find to retry.");
+        }
+      }
+      function appendLocationSuggestion(place, isGeocoded) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "suggestion";
+        button.setAttribute("role", "option");
+        button.textContent = place.name;
+        const detail = document.createElement("small");
+        detail.textContent = [place.admin1 || place.coast, place.country].filter(Boolean).join(" · ");
+        button.append(detail);
+        button.addEventListener("click", () => {
+          suggestions.classList.remove("open");
+          if (isGeocoded) lookupLocation("", place);
+          else lookupLocation(`${place.name}, ${place.country}`);
+        });
+        suggestions.append(button);
+      }
+      function weatherDescription(code) {
+        const conditions = {
+          0: ["Clear sky", "☀"], 1: ["Mainly clear", "🌤"], 2: ["Partly cloudy", "⛅"], 3: ["Overcast", "☁"],
+          45: ["Fog", "🌫"], 48: ["Depositing rime fog", "🌫"], 51: ["Light drizzle", "🌦"], 53: ["Drizzle", "🌦"],
+          55: ["Heavy drizzle", "🌧"], 56: ["Freezing drizzle", "🌧"], 57: ["Heavy freezing drizzle", "🌧"],
+          61: ["Light rain", "🌦"], 63: ["Rain", "🌧"], 65: ["Heavy rain", "🌧"], 66: ["Freezing rain", "🌧"],
+          67: ["Heavy freezing rain", "🌧"], 71: ["Light snow", "🌨"], 73: ["Snow", "🌨"], 75: ["Heavy snow", "❄"],
+          77: ["Snow grains", "🌨"], 80: ["Rain showers", "🌦"], 81: ["Rain showers", "🌧"], 82: ["Heavy rain showers", "🌧"],
+          85: ["Snow showers", "🌨"], 86: ["Heavy snow showers", "❄"], 95: ["Thunderstorm", "⛈"],
+          96: ["Thunderstorm with hail", "⛈"], 99: ["Severe thunderstorm with hail", "⛈"]
+        };
+        return conditions[code] || ["Weather conditions", "🌤"];
+      }
+      function compassDirection(degrees) {
+        const directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+        return directions[Math.round((((degrees % 360) + 360) % 360) / 45) % directions.length];
+      }
+      async function fetchForecast(place, signal) {
+        const latitude = Number(place.latitude ?? place.lat);
+        const longitude = Number(place.longitude ?? place.lon);
+        if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+          throw new Error("No valid coordinates are available for this location.");
+        }
+        const url = new URL("https://api.open-meteo.com/v1/forecast");
+        url.search = new URLSearchParams({
+          latitude: String(latitude),
+          longitude: String(longitude),
+          current: "temperature_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m",
+          daily: "sunrise,sunset",
+          timezone: "auto",
+          forecast_days: "1"
+        });
+        const marineUrl = new URL("https://marine-api.open-meteo.com/v1/marine");
+        marineUrl.search = new URLSearchParams({
+          latitude: String(latitude),
+          longitude: String(longitude),
+          current: "wave_height,wave_direction,wave_period,sea_surface_temperature",
+          timezone: "auto",
+          forecast_days: "1"
+        });
+        const [response, marineResponse] = await Promise.all([
+          fetch(url, { signal }),
+          fetch(marineUrl, { signal }).catch(error => {
+            if (error.name !== "AbortError") console.warn("Marine conditions are currently unavailable.", error);
+            return null;
+          })
+        ]);
+        if (!response.ok) throw new Error(`Weather forecast failed (${response.status}).`);
+        const data = await response.json();
+        if (!data.current || !Number.isFinite(data.current.temperature_2m)) throw new Error("No current weather data is available for this location.");
+        let marineData = null;
+        if (marineResponse?.ok) marineData = await marineResponse.json();
+        else if (marineResponse) console.warn(`Marine forecast unavailable (${marineResponse.status}).`);
+        const marine = marineData?.current || {};
+        const [description, symbol] = weatherDescription(data.current.weather_code);
+        const sunrise = data.daily?.sunrise?.[0]?.slice(11, 16) || "—";
+        const sunset = data.daily?.sunset?.[0]?.slice(11, 16) || "—";
+        const wind = Number.isFinite(data.current.wind_speed_10m)
+          ? `${Math.round(data.current.wind_speed_10m)} km/h${Number.isFinite(data.current.wind_direction_10m) ? ` · ${compassDirection(data.current.wind_direction_10m)}` : ""}`
+          : "Not available";
+        return {
+          ...place,
+          name: place.name,
+          country: place.country || "Selected location",
+          coast: place.admin1 || place.coast || "Local forecast",
+          lat: latitude,
+          lon: longitude,
+          hasOffshoreRoute: false,
+          liveForecast: true,
+          timezone: place.timezone || data.timezone || "UTC",
+          temp: `${Math.round(data.current.temperature_2m)}°`,
+          feelsLike: Number.isFinite(data.current.apparent_temperature) ? `${Math.round(data.current.apparent_temperature)}°` : "Not available",
+          weather: description,
+          symbol,
+          wind,
+          water: Number.isFinite(marine.sea_surface_temperature) ? `${marine.sea_surface_temperature.toFixed(1)}°C` : "Not available",
+          wave: Number.isFinite(marine.wave_height)
+            ? `${marine.wave_height.toFixed(1)} m${Number.isFinite(marine.wave_direction) ? ` · ${compassDirection(marine.wave_direction)}` : ""}${Number.isFinite(marine.wave_period) ? ` · ${marine.wave_period.toFixed(0)} s` : ""}`
+            : "Not available",
+          best: `${sunrise} · ${sunset}`,
+          liveUpdated: data.current.time ? `${data.current.time.slice(11, 16)} local time` : "recently"
+        };
+      }
+      async function lookupLocation(query, selectedPlace) {
+        lookupController?.abort();
+        const controller = new AbortController();
+        lookupController = controller;
+        submitButton.disabled = true;
+        submitButton.textContent = query ? "Finding…" : "Refreshing…";
+        document.getElementById("refresh-conditions").disabled = true;
+        document.getElementById("live-status").textContent = query ? "Finding location and refreshing conditions…" : "Refreshing current conditions…";
+        try {
+          let place = selectedPlace;
+          if (!place) {
+            const results = await fetchGeocoding(query, controller.signal);
+            if (!results.length) {
+              showToast("No matching place found. Try a city, town, or nearby location.");
+              return;
+            }
+            place = results[0];
+          }
+          const forecast = await fetchForecast(place, controller.signal);
+          if (controller.signal.aborted) return;
+          renderDestination(forecast);
+          if (query.trim()) save("castaway-destination", forecast);
+          showToast(`Conditions updated for ${forecast.name}.`);
+        } catch (error) {
+          if (error.name === "AbortError") return;
+          console.error("Could not load location or weather data.", error);
+          document.getElementById("live-status").textContent = "Could not refresh. Check your connection and retry.";
+          showToast("Could not load that location. Check your connection and try again.");
+        } finally {
+          if (lookupController === controller) {
+            lookupController = null;
+            submitButton.disabled = false;
+            submitButton.textContent = "Find";
+            document.getElementById("refresh-conditions").disabled = false;
+          }
+        }
+      }
+      document.getElementById("refresh-conditions").addEventListener("click", () => {
+        lookupLocation("", state.destination);
+      });
+      const conditionRefreshInterval = setInterval(() => {
+        if (!document.hidden && !lookupController) lookupLocation("", state.destination);
+      }, 30 * 60 * 1000);
+      window.addEventListener("beforeunload", () => clearInterval(conditionRefreshInterval), { once: true });
+      input.addEventListener("focus", () => showSuggestions(input.value));
+      input.addEventListener("input", () => showSuggestions(input.value));
+      document.getElementById("location-form").addEventListener("submit", event => {
+        event.preventDefault();
+        const query = input.value.trim();
+        if (query) lookupLocation(query);
+      });
+      document.addEventListener("click", event => {
+        if (!event.target.closest(".search-wrap")) suggestions.classList.remove("open");
+      });
+      function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]);
+      }
+
+      function formatDate(dateString) {
+        const date = new Date(`${dateString}T12:00:00`);
+        return { day: date.toLocaleDateString(undefined, { day: "2-digit" }), month: date.toLocaleDateString(undefined, { month: "short" }).toUpperCase() };
+      }
+      function renderEvents() {
+        const grid = document.getElementById("event-grid");
+        grid.replaceChildren();
+        if (state.events.length === 0) {
+          grid.innerHTML = '<div class="card empty-state event-empty">No events yet. Create one and invite other anglers to join you.</div>';
+          return;
+        }
+        state.events.forEach((event, index) => {
+          const date = formatDate(event.date);
+          const card = document.createElement("article");
+          card.className = "card event-card";
+          const joined = state.joined.includes(event.id || `initial-${index}`);
+          card.innerHTML = `<div class="event-top"><div class="date-block"><strong>${escapeHtml(date.day)}</strong><small>${escapeHtml(date.month)}</small></div><div><h3>${escapeHtml(event.title)}</h3><div class="event-location">📍 ${escapeHtml(event.location)}</div></div></div><p class="event-description">${escapeHtml(event.description || "Come along for a day on the water.")}</p><div class="event-footer"><span class="attending">🎣 ${Number(event.people) || 1} anglers going</span><button class="join-button${joined ? " joined" : ""}" data-event-index="${index}">${joined ? "You're going ✓" : "Join in"}</button></div>`;
+          grid.append(card);
+        });
+        grid.querySelectorAll(".join-button").forEach(button => button.addEventListener("click", () => {
+          const event = state.events[Number(button.dataset.eventIndex)];
+          const id = event.id || `initial-${button.dataset.eventIndex}`;
+          if (state.joined.includes(id)) {
+            state.joined = state.joined.filter(joinedId => joinedId !== id);
+            event.people = Math.max(0, (Number(event.people) || 1) - 1);
+            showToast("You've left this event.");
+          } else {
+            state.joined.push(id);
+            event.people = (Number(event.people) || 0) + 1;
+            showToast("You're on the list. See you there!");
+          }
+          save("castaway-joined", state.joined);
+          save("castaway-events", state.events);
+          renderEvents();
+        }));
+      }
+      function renderCatchLog() {
+        const catchGrid = document.getElementById("catch-grid");
+        catchGrid.replaceChildren();
+        if (!state.catches.length) {
+          const empty = document.createElement("div");
+          empty.className = "empty-state";
+          empty.textContent = "Your catch log is empty. Add a photo and details to remember your next one.";
+          catchGrid.append(empty);
+          return;
+        }
+        for (const entry of state.catches) {
+          const card = document.createElement("article");
+          card.className = "catch-card";
+          const image = document.createElement("img");
+          image.className = "catch-photo";
+          image.src = entry.photo;
+          image.alt = `${entry.species} catch`;
+          const body = document.createElement("div");
+          body.className = "catch-card-body";
+          const title = document.createElement("h2");
+          title.textContent = entry.species;
+          const meta = document.createElement("div");
+          meta.className = "catch-card-meta";
+          meta.textContent = [new Date(`${entry.caught_at}T12:00:00`).toLocaleDateString(), entry.location].filter(Boolean).join(" · ");
+          const footer = document.createElement("div");
+          footer.className = "catch-card-footer";
+          const weight = document.createElement("strong");
+          weight.textContent = `${Number(entry.weight).toLocaleString(undefined, { maximumFractionDigits: 2 })} ${entry.unit}`;
+          const remove = document.createElement("button");
+          remove.className = "delete-catch";
+          remove.type = "button";
+          remove.textContent = "Delete";
+          remove.setAttribute("aria-label", `Delete ${entry.species} catch`);
+          remove.addEventListener("click", () => deleteCatch(entry));
+          footer.append(weight, remove);
+          body.append(title, meta);
+          if (entry.notes) {
+            const notes = document.createElement("p");
+            notes.className = "catch-card-notes";
+            notes.textContent = entry.notes;
+            body.append(notes);
+          }
+          body.append(footer);
+          card.append(image, body);
+          catchGrid.append(card);
+        }
+      }
+      function deleteCatch(entry) {
+        const previousCatches = state.catches;
+        state.catches = state.catches.filter(catchEntry => catchEntry.id !== entry.id);
+        if (!save("castaway-catches", state.catches)) {
+          state.catches = previousCatches;
+          return;
+        }
+        renderCatchLog();
+        showToast("Catch deleted.");
+      }
+
+      const catchModal = document.getElementById("catch-modal");
+      document.getElementById("open-catch").addEventListener("click", () => {
+        catchModal.classList.add("open");
+        document.querySelector('#catch-form [name="caught_at"]').value = dateOffset(0);
+        document.querySelector('#catch-form [name="fish"]').focus();
+      });
+      document.querySelector('#catch-form [name="photo"]').addEventListener("change", event => {
+        const preview = document.getElementById("catch-photo-preview");
+        if (preview.dataset.objectUrl) URL.revokeObjectURL(preview.dataset.objectUrl);
+        const file = event.currentTarget.files[0];
+        if (!file) {
+          preview.removeAttribute("src");
+          preview.classList.remove("visible");
+          return;
+        }
+        const objectUrl = URL.createObjectURL(file);
+        preview.dataset.objectUrl = objectUrl;
+        preview.src = objectUrl;
+        preview.classList.add("visible");
+      });
+      function closeCatchModal() { catchModal.classList.remove("open"); }
+      document.getElementById("close-catch").addEventListener("click", closeCatchModal);
+      catchModal.addEventListener("click", event => { if (event.target === catchModal) closeCatchModal(); });
+      document.addEventListener("keydown", event => {
+        if (event.key === "Escape") {
+          closeModal();
+          closeCatchModal();
+        }
+      });
+      document.getElementById("catch-form").addEventListener("submit", async event => {
+        event.preventDefault();
+        const formElement = event.currentTarget;
+        const form = new FormData(formElement);
+        const species = String(form.get("fish")).trim();
+        const weight = Number(form.get("weight"));
+        const unit = String(form.get("unit"));
+        const photo = form.get("photo");
+        if (!species || !Number.isFinite(weight) || weight <= 0 || (unit !== "kg" && unit !== "lb")) {
+          showToast("Enter a fish species and a weight greater than zero.");
+          return;
+        }
+        if (!(photo instanceof File) || !["image/jpeg", "image/png"].includes(photo.type) || photo.size > 8 * 1024 * 1024) {
+          showToast("Choose a JPG or PNG photo smaller than 8 MB.");
+          return;
+        }
+        const submitButton = event.currentTarget.querySelector('[type="submit"]');
+        submitButton.disabled = true;
+        submitButton.textContent = "Saving…";
+        try {
+          const entry = {
+            id: `catch-${Date.now()}`,
+            species,
+            weight,
+            unit,
+            caught_at: form.get("caught_at"),
+            location: String(form.get("location") || "").trim(),
+            notes: String(form.get("notes") || "").trim(),
+            photo: await fileToDataUrl(photo)
+          };
+          state.catches.unshift(entry);
+          if (!save("castaway-catches", state.catches)) {
+            state.catches.shift();
+            return;
+          }
+          formElement.reset();
+          document.getElementById("catch-photo-preview").classList.remove("visible");
+          closeCatchModal();
+          renderCatchLog();
+          showToast("Catch saved on this device.");
+        } catch (error) {
+          showToast(`Could not save catch: ${error.message}`);
+        } finally {
+          submitButton.disabled = false;
+          submitButton.textContent = "Save catch";
+        }
+      });
+
+      const modal = document.getElementById("event-modal");
+      document.getElementById("open-event").addEventListener("click", () => {
+        modal.classList.add("open");
+        const dateField = document.querySelector('#event-form [name="date"]');
+        dateField.min = dateOffset(0);
+        dateField.value = dateOffset(2);
+        document.querySelector('#event-form [name="title"]').focus();
+      });
+      function closeModal() { modal.classList.remove("open"); }
+      document.getElementById("close-event").addEventListener("click", closeModal);
+      modal.addEventListener("click", event => { if (event.target === modal) closeModal(); });
+      document.getElementById("event-form").addEventListener("submit", event => {
+        event.preventDefault();
+        const form = new FormData(event.currentTarget);
+        const newEvent = {
+          id: `event-${Date.now()}`, title: form.get("title").trim(), location: form.get("location").trim(),
+          date: form.get("date"), description: form.get("description").trim(), people: 1
+        };
+        state.events.unshift(newEvent);
+        save("castaway-events", state.events);
+        renderEvents();
+        event.currentTarget.reset();
+        closeModal();
+        showToast("Your fishing event is live!");
+      });
+
+      function initials(name) {
+        return name.trim().split(/\s+/).slice(0, 2).map(part => part[0] || "").join("").toUpperCase() || "A";
+      }
+      function fileToDataUrl(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result));
+          reader.onerror = () => reject(new Error("Could not read that photo."));
+          reader.readAsDataURL(file);
+        });
+      }
+      function renderProfile() {
+        document.getElementById("profile-name").value = state.profile.name;
+        document.getElementById("profile-location").value = state.profile.location;
+        document.getElementById("profile-style").value = state.profile.style;
+        document.getElementById("profile-gear").value = state.profile.gear || "";
+        const hasProfile = Boolean(state.profile.name);
+        document.getElementById("profile-name-display").textContent = hasProfile ? state.profile.name : "Set up your profile";
+        document.getElementById("profile-location-display").textContent = hasProfile
+          ? [state.profile.location, state.profile.style, state.profile.gear].filter(Boolean).join(" · ") || "Angler"
+          : "Add your details below to get started.";
+        const avatarInitials = hasProfile ? initials(state.profile.name) : "?";
+        document.getElementById("profile-avatar-initials").textContent = avatarInitials;
+        const profileImage = document.getElementById("profile-avatar-image");
+        const hasPicture = typeof state.profile.picture === "string" && state.profile.picture.startsWith("data:image/");
+        profileImage.hidden = !hasPicture;
+        if (hasPicture) {
+          profileImage.src = state.profile.picture;
+        } else {
+          profileImage.removeAttribute("src");
+        }
+      }
+      document.getElementById("profile-picture-input").addEventListener("change", async event => {
+        const fileInput = event.currentTarget;
+        const file = fileInput.files[0];
+        if (!file) return;
+        if (!file.type.startsWith("image/")) {
+          showToast("Choose an image file for your profile picture.");
+          fileInput.value = "";
+          return;
+        }
+        if (file.size > 8 * 1024 * 1024) {
+          showToast("Choose an image smaller than 8 MB.");
+          fileInput.value = "";
+          return;
+        }
+        try {
+          const picture = await resizeProfilePicture(file);
+          state.profile.picture = picture;
+          save("castaway-profile", state.profile);
+          renderProfile();
+          showToast("Profile picture updated.");
+        } catch (error) {
+          console.error("Could not load the selected profile picture.", error);
+          showToast("Could not load that image. Please choose another one.");
+        }
+        fileInput.value = "";
+      });
+      function resizeProfilePicture(file) {
+        return new Promise((resolve, reject) => {
+          const imageUrl = URL.createObjectURL(file);
+          const image = new Image();
+          image.onload = () => {
+            URL.revokeObjectURL(imageUrl);
+            const scale = Math.min(1, 512 / Math.max(image.naturalWidth, image.naturalHeight));
+            const canvas = document.createElement("canvas");
+            canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+            canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+            const context = canvas.getContext("2d");
+            if (!context) {
+              reject(new Error("Image canvas is unavailable."));
+              return;
+            }
+            context.drawImage(image, 0, 0, canvas.width, canvas.height);
+            try {
+              resolve(canvas.toDataURL("image/jpeg", 0.82));
+            } catch (error) {
+              reject(error);
+            }
+          };
+          image.onerror = () => {
+            URL.revokeObjectURL(imageUrl);
+            reject(new Error("Selected file could not be decoded as an image."));
+          };
+          image.src = imageUrl;
+        });
+      }
+      document.getElementById("profile-form").addEventListener("submit", event => {
+        event.preventDefault();
+        const profile = {
+          name: document.getElementById("profile-name").value.trim(),
+          location: document.getElementById("profile-location").value.trim(),
+          style: document.getElementById("profile-style").value,
+          gear: document.getElementById("profile-gear").value.trim(),
+          picture: state.profile.picture || ""
+        };
+        state.profile = profile;
+        save("castaway-profile", state.profile);
+        renderProfile();
+        const message = document.getElementById("saved-message");
+        message.textContent = "Profile saved";
+        setTimeout(() => { message.textContent = ""; }, 2200);
+      });
+
+      renderDestination(state.destination);
+      renderEvents();
+      renderCatchLog();
+      renderProfile();
+      document.getElementById("condition-day").textContent = new Date().toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" }).toUpperCase();
+      initializeDatabase();
+    </script>
+  </body>
+</html>

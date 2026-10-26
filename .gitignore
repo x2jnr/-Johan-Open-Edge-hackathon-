@@ -1,0 +1,21 @@
+# Local user data
+open-fishing.sqlite3*
+
+# Progress installation files in the containing folder
+/esam/
+/sonicesb/
+/sonicmq/
+/uictrls/
+*.exe
+*.msi
+*.dll
+*.jar
+*.car
+
+# Local configuration and editor files
+.env
+.env.*
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini
